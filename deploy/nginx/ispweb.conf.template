@@ -1,0 +1,166 @@
+# 由 deploy/lib/render_nginx.py 生成，重新部署时覆盖。
+# API 上游（与 vite.config.js 的 API_PROXY_TARGET 一致）：__API_UPSTREAM__
+# 浏览器可用的主机名：__SERVER_NAMES__。明文 /api 与 /ws 在本层直接断开。
+# /_g/ 与 /_gws/ 转到本机网关做参数杂凑校验，网关再访问上面的 API 上游。
+
+server {
+    listen 80 default_server;
+    #__IPV6__ listen [::]:80 default_server;
+    server_name _;
+    access_log /var/log/nginx/ispweb.access.log ispweb_safe;
+    error_log /var/log/nginx/ispweb.error.log warn;
+    return 444;
+}
+
+server {
+    #__DOMAINONLY__ listen 443 ssl default_server;
+    #__DOMAINONLY__ #__IPV6__ listen [::]:443 ssl default_server;
+    #__IPACCESS__ listen 443 ssl;
+    #__IPACCESS__ #__IPV6__ listen [::]:443 ssl;
+    server_name _;
+    ssl_certificate /etc/ssl/certs/ssl-cert-snakeoil.pem;
+    ssl_certificate_key /etc/ssl/private/ssl-cert-snakeoil.key;
+    access_log /var/log/nginx/ispweb.access.log ispweb_safe;
+    error_log /var/log/nginx/ispweb.error.log warn;
+    return 444;
+}
+
+server {
+    listen 80;
+    #__IPV6__ listen [::]:80;
+    server_name __DOMAIN__;
+
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/html;
+        default_type text/plain;
+    }
+
+    location / {
+        return 301 https://__DOMAIN__$request_uri;
+    }
+}
+
+#__IPACCESS__ server {
+#__IPACCESS__     listen 80;
+#__IPACCESS__     server_name __PUBLIC_IP__;
+#__IPACCESS__     access_log /var/log/nginx/ispweb.access.log ispweb_safe;
+#__IPACCESS__     return 301 https://__PUBLIC_IP__$request_uri;
+#__IPACCESS__ }
+
+server {
+    #__DOMAINONLY__ listen 443 ssl http2;
+    #__DOMAINONLY__ #__IPV6__ listen [::]:443 ssl http2;
+    # 用 IP 访问时浏览器不发 SNI，nginx 只能把这类连接交给 default_server。
+    #__IPACCESS__ listen 443 ssl http2 default_server;
+    #__IPACCESS__ #__IPV6__ listen [::]:443 ssl http2 default_server;
+    server_name __SERVER_NAMES__;
+
+    ssl_certificate __SSL_CERT__;
+    ssl_certificate_key __SSL_KEY__;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers off;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305;
+    ssl_session_timeout 1d;
+    ssl_session_cache shared:ISPWEBSSL:10m;
+    ssl_session_tickets off;
+    #__STAPLING__ ssl_trusted_certificate __SSL_TRUSTED__;
+    #__STAPLING__ ssl_stapling on;
+    #__STAPLING__ ssl_stapling_verify on;
+    #__STAPLING__ resolver 1.1.1.1 8.8.8.8 valid=300s ipv6=off;
+    #__STAPLING__ resolver_timeout 5s;
+
+    root __WEB_ROOT__;
+    index index.html;
+    charset utf-8;
+    absolute_redirect off;
+
+    access_log /var/log/nginx/ispweb.access.log ispweb_safe;
+    error_log /var/log/nginx/ispweb.error.log warn;
+
+    client_max_body_size 2m;
+    large_client_header_buffers 4 32k;
+
+    #__DOMAINONLY__ if ($ispweb_ip_host = 1) { return 444; }
+    #__DOMAINONLY__ if ($host != "__DOMAIN__") { return 444; }
+    #__IPACCESS__ if ($host !~ "__HOST_RE__") { return 444; }
+    if ($http_host = "") { return 444; }
+    if ($request_uri ~* "(%00|%2500|%2e%2e|%2E%2E|%252e|%5c|%255c)") { return 444; }
+    if ($request_method !~ ^(GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS)$) { return 405; }
+
+    location ~ /\. {
+        return 444;
+    }
+
+    location ~* ^/(wp-admin|wp-login\.php|xmlrpc\.php|phpmyadmin|\.env|\.git) {
+        return 444;
+    }
+
+    location ^~ /api/ { return 444; }
+    location = /api { return 444; }
+    location ^~ /ws/ { return 444; }
+    location = /ws { return 444; }
+
+    location ^~ /_g/ {
+        include /etc/nginx/snippets/ispweb-headers.conf;
+        limit_req zone=ispweb_api burst=20 nodelay;
+        limit_conn ispweb_conn 40;
+        client_max_body_size 2m;
+        gzip off;
+        proxy_pass http://127.0.0.1:__GUARD_PORT__;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header Connection "";
+        proxy_connect_timeout 10s;
+        proxy_send_timeout 3600s;
+        proxy_read_timeout 3600s;
+        proxy_buffering off;
+        proxy_hide_header X-Powered-By;
+        proxy_hide_header Server;
+    }
+
+    location ^~ /_gws/ {
+        include /etc/nginx/snippets/ispweb-headers.conf;
+        limit_req zone=ispweb_api burst=20 nodelay;
+        limit_conn ispweb_conn 20;
+        gzip off;
+        proxy_pass http://127.0.0.1:__GUARD_PORT__;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $ispweb_connection_upgrade;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_connect_timeout 10s;
+        proxy_send_timeout 3600s;
+        proxy_read_timeout 3600s;
+        proxy_buffering off;
+    }
+
+    location ^~ /assets/ {
+        include /etc/nginx/snippets/ispweb-headers.conf;
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        limit_req zone=ispweb_web burst=80 nodelay;
+        try_files $uri =404;
+        access_log off;
+    }
+
+    location = /index.html {
+        include /etc/nginx/snippets/ispweb-headers.conf;
+        add_header Cache-Control "no-store" always;
+        limit_req zone=ispweb_web burst=40 nodelay;
+    }
+
+    location / {
+        include /etc/nginx/snippets/ispweb-headers.conf;
+        add_header Cache-Control "no-store" always;
+        limit_req zone=ispweb_web burst=60 nodelay;
+        limit_conn ispweb_conn 40;
+        try_files $uri $uri/ /index.html;
+    }
+}

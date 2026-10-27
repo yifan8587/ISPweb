@@ -1,0 +1,204 @@
+:root {
+  --ce-primary: #2563eb;
+  --ce-primary-dark: #1d4ed8;
+  --ce-accent: #06b6d4;
+  --ce-dark: #0b1120;
+  --ce-dark-2: #111c33;
+  --ce-primary-soft: #eff6ff;
+  --ce-accent-soft: #ecfeff;
+  --ce-text: #172033;
+  --ce-text-secondary: #475569;
+  --ce-muted: #64748b;
+  --ce-border: #e2e8f0;
+  --ce-border-strong: #cbd5e1;
+  --ce-bg: #f8fafc;
+  --ce-surface: #ffffff;
+  --ce-surface-subtle: #f1f5f9;
+  --ce-radius-sm: 10px;
+  --ce-radius: 16px;
+  --ce-radius-lg: 24px;
+  --ce-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  --ce-shadow-lg: 0 20px 48px rgba(15, 23, 42, 0.11);
+  --ce-space-section: 88px;
+  --ce-price: #e1251b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--ce-bg);
+  color: var(--ce-text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+img,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.ce-container,
+.ce-container--wide {
+  width: 100%;
+  max-width: none;
+  margin: 0 auto;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+@media (min-width: 1200px) {
+  .ce-container,
+  .ce-container--wide {
+    padding-left: 30px;
+    padding-right: 30px;
+  }
+}
+
+.ce-section {
+  padding: var(--ce-space-section) 0;
+}
+
+.ce-eyebrow {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ce-primary);
+  margin-bottom: 12px;
+}
+
+.ce-h2 {
+  font-size: clamp(30px, 3vw, 42px);
+  line-height: 1.2;
+  font-weight: 750;
+  margin: 0 0 16px;
+  letter-spacing: -0.035em;
+}
+
+.ce-sub {
+  color: var(--ce-muted);
+  font-size: 16px;
+  line-height: 1.7;
+  max-width: 640px;
+}
+
+.ce-gradient-text {
+  background: linear-gradient(120deg, #60a5fa, #22d3ee 60%, #a78bfa);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.ce-card {
+  background: var(--ce-surface);
+  border: 1px solid var(--ce-border);
+  border-radius: var(--ce-radius);
+  box-shadow: var(--ce-shadow);
+}
+
+.ce-section-head {
+  max-width: 680px;
+}
+
+.ce-section-head--center {
+  margin-right: auto;
+  margin-left: auto;
+  text-align: center;
+}
+
+.ce-surface {
+  background: var(--ce-surface);
+}
+
+.ce-surface-subtle {
+  background: var(--ce-surface-subtle);
+}
+
+/* 让 Element Plus 主色与品牌统一 */
+.el-button--primary {
+  --el-button-bg-color: var(--ce-primary);
+  --el-button-border-color: var(--ce-primary);
+  --el-button-hover-bg-color: var(--ce-primary-dark);
+  --el-button-hover-border-color: var(--ce-primary-dark);
+}
+
+.el-button {
+  font-weight: 650;
+}
+
+.el-button.is-round {
+  padding-right: 22px;
+  padding-left: 22px;
+}
+
+.el-input__wrapper,
+.el-select__wrapper {
+  box-shadow: 0 0 0 1px var(--ce-border) inset;
+}
+
+.muted {
+  color: var(--ce-muted);
+}
+
+.el-pagination {
+  flex-wrap: wrap;
+  row-gap: 8px;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --ce-space-section: 56px;
+  }
+  .ce-h2 {
+    font-size: 26px;
+  }
+  .el-overlay-dialog .el-dialog,
+  .el-dialog {
+    width: calc(100vw - 24px) !important;
+    max-width: calc(100vw - 24px);
+    margin: 12px auto !important;
+  }
+  .el-message-box {
+    width: calc(100vw - 32px) !important;
+  }
+  .el-drawer__body {
+    padding: 12px 14px 20px;
+  }
+  .el-radio-group {
+    display: inline-flex;
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+  .el-descriptions__body .el-descriptions__table,
+  .el-descriptions__body .el-descriptions__table tbody,
+  .el-descriptions__body .el-descriptions__table tr,
+  .el-descriptions__body .el-descriptions__cell {
+    display: block;
+    width: 100% !important;
+  }
+  .el-table {
+    font-size: 13px;
+  }
+  .el-table .cell {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}

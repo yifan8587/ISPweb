@@ -1,0 +1,26 @@
+# 证书签发前的临时站点：只开放 ACME 校验，其余请求直接断开。
+# API 上游（与 vite.config.js 的 API_PROXY_TARGET 一致）：__API_UPSTREAM__
+
+server {
+    listen 80 default_server;
+    #__IPV6__ listen [::]:80 default_server;
+    server_name _;
+    access_log /var/log/nginx/ispweb.access.log ispweb_safe;
+    error_log /var/log/nginx/ispweb.error.log warn;
+    return 444;
+}
+
+server {
+    listen 80;
+    #__IPV6__ listen [::]:80;
+    server_name __DOMAIN__;
+
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/html;
+        default_type text/plain;
+    }
+
+    location / {
+        return 503;
+    }
+}

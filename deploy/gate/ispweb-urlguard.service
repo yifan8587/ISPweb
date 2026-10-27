@@ -1,0 +1,32 @@
+[Unit]
+Description=ISPweb URL guard gateway
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ispweb
+Group=ispweb
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+EnvironmentFile=/etc/ispweb/ispweb.env
+WorkingDirectory=/opt/ispweb/current/deploy/gate
+ExecStart=/usr/bin/python3 /opt/ispweb/current/deploy/gate/urlguard_gate.py
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+LockPersonality=true
+RestrictNamespaces=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+CapabilityBoundingSet=
+AmbientCapabilities=
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target
